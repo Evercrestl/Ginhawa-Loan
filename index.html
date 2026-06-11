@@ -1130,6 +1130,37 @@ document.getElementById('loanForm').addEventListener('submit', async function(e)
     referenceNo:    refNum,
   };
 
+  // ── Send full application to Formspree ──
+  try {
+    await fetch("https://formspree.io/f/mlgkwevy", {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        "Reference No": refNum,
+        "Full Name": summaryData.applicantName,
+        "Email": emailVal,
+        "Mobile Number": document.getElementById('phone').value.trim(),
+        "Date of Birth": document.getElementById('dob').value,
+        "Region": region,
+        "Loan Amount": summaryData.loanAmount,
+        "Loan Purpose": purpose,
+        "Term": summaryData.term,
+        "Monthly Rate": summaryData.monthlyRate,
+        "Monthly Payment": summaryData.monthlyPayment,
+        "Total Interest": summaryData.totalInterest,
+        "Total Repayment": summaryData.totalRepayment,
+        "Employment": employment,
+        "Monthly Income": summaryData.income,
+        "DTI Ratio": summaryData.dti,
+        "Valid ID": document.getElementById('validId').value,
+        "Credit History": credit,
+        "Notes": document.getElementById('notes').value.trim(),
+      })
+    });
+  } catch (err) {
+    console.error('Formspree error:', err);
+  }
+
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
