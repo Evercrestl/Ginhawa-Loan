@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ginhawa Loan — Admin Review Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --indigo:#4F46E5;--indigo-dk:#3730A3;--indigo-lt:#EEF2FF;
+  --ink:#0F172A;--slate:#64748B;--slate-lt:#94A3B8;
+  --bg:#F8FAFC;--line:#E2E8F0;
+  --green:#10B981;--green-lt:#ECFDF5;
+  --red:#EF4444;--red-lt:#FEF2F2;
+  --radius:14px;--shadow:0 4px 24px rgba(15,23,42,.06);--shadow-lg:0 12px 48px rgba(15,23,42,.12);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Sora',sans-serif}
+
+nav{background:#fff;border-bottom:1px solid var(--line);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--indigo) 0%,#818CF8 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.brand-name{font-weight:800;font-size:1.1rem}
+.brand-name span{color:var(--indigo)}
+.admin-tag{font-size:.75rem;font-weight:700;color:var(--slate);background:var(--bg);border:1px solid var(--line);padding:5px 12px;border-radius:50px}
+
+.wrap{max-width:760px;margin:0 auto;padding:48px 24px 90px}
+.intro{margin-bottom:32px}
+.intro h1{font-size:1.7rem;font-weight:800;margin-bottom:8px}
+.intro p{color:var(--slate);font-size:.92rem;line-height:1.6}
+
+.setup-banner{background:var(--indigo-lt);border:1px solid #C7D2FE;border-radius:12px;padding:18px 20px;margin-bottom:28px;font-size:.85rem;line-height:1.7;color:var(--indigo-dk)}
+.setup-banner code{background:#fff;padding:2px 6px;border-radius:4px;font-size:.8rem}
+.setup-banner.hide{display:none}
+.setup-banner a{color:var(--indigo-dk);font-weight:700}
+
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:32px;margin-bottom:24px}
+.card h2{font-size:1.05rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.field label{font-size:.8rem;font-weight:600}
+.field label .hint{color:var(--slate-lt);font-weight:400;font-size:.75rem}
+input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;color:var(--ink);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+textarea{resize:vertical;min-height:90px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+.decision-toggle{display:flex;gap:12px;margin-bottom:18px}
+.decision-btn{flex:1;padding:18px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;text-align:center;transition:all .2s;font-family:'Inter',sans-serif}
+.decision-btn .icon{font-size:1.6rem;margin-bottom:6px;display:block}
+.decision-btn .lbl{font-weight:700;font-size:.92rem}
+.decision-btn.approve.active{border-color:var(--green);background:var(--green-lt);color:#047857}
+.decision-btn.decline.active{border-color:var(--red);background:var(--red-lt);color:var(--red)}
+
+.reasons{display:none;margin-bottom:18px}
+.reasons.show{display:block}
+.reason-chip{display:inline-block;padding:6px 14px;border:1.5px solid var(--line);border-radius:50px;font-size:.78rem;font-weight:600;cursor:pointer;margin:0 8px 8px 0;transition:all .15s;color:var(--slate)}
+.reason-chip.selected{border-color:var(--indigo);background:var(--indigo-lt);color:var(--indigo)}
+
+.send-btn{width:100%;padding:15px 24px;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.send-btn.approve{background:var(--green)}
+.send-btn.approve:hover{background:#059669}
+.send-btn.decline{background:var(--red)}
+.send-btn.decline:hover{background:#DC2626}
+.send-btn:disabled{opacity:.6;cursor:not-allowed}
+
+.spinner{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.spinner.show{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.preview-box{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:18px;font-size:.85rem;line-height:1.7;white-space:pre-wrap;color:var(--ink);margin-top:18px;display:none}
+.preview-box.show{display:block}
+.preview-label{font-size:.7rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate-lt);margin-bottom:10px}
+
+.status-msg{padding:14px 16px;border-radius:10px;font-size:.85rem;font-weight:600;margin-top:16px;display:none}
+.status-msg.show{display:block}
+.status-msg.success{background:var(--green-lt);color:#047857}
+.status-msg.error{background:var(--red-lt);color:var(--red)}
+
+.dashboard-link{display:flex;align-items:center;justify-content:space-between;background:var(--indigo-lt);border-radius:12px;padding:16px 20px;margin-bottom:28px;text-decoration:none;color:var(--indigo-dk);transition:background .2s}
+.dashboard-link:hover{background:#E0E7FF}
+.dashboard-link .left{display:flex;align-items:center;gap:12px}
+.dashboard-link .icon{font-size:1.4rem}
+.dashboard-link .txt strong{display:block;font-size:.9rem}
+.dashboard-link .txt span{font-size:.78rem;opacity:.8}
+.dashboard-link .arrow{font-size:1.2rem}
+
+@media(max-width:560px){.frow{grid-template-columns:1fr}.decision-toggle{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <div class="brand-mark">G</div>
+    <div class="brand-name">Ginhawa<span>Loan</span></div>
+  </div>
+  <div class="admin-tag">🔐 Admin Panel</div>
+</nav>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Loan Application Review</h1>
+    <p>Enter the applicant's reference number and details below, choose Approve or Decline, then send their decision email instantly.</p>
+  </div>
+
+  <a href="https://formspree.io/forms" target="_blank" class="dashboard-link">
+    <div class="left">
+      <div class="icon">📋</div>
+      <div class="txt"><strong>View Submitted Applications</strong><span>Open Formspree dashboard to see all applications & uploaded documents</span></div>
+    </div>
+    <div class="arrow">→</div>
+  </a>
+
+  <div class="setup-banner" id="setupBanner">
+    <strong>⚙️ One-time setup required:</strong> This panel sends emails using <strong>EmailJS</strong> (free, no backend needed).
+    <ol style="margin:10px 0 0 18px;padding:0">
+      <li>Create a free account at <a href="https://www.emailjs.com" target="_blank">emailjs.com</a></li>
+      <li>Add an Email Service (e.g. Gmail) and connect your inbox</li>
+      <li>Create an Email Template with variables: <code>{{to_email}}</code>, <code>{{to_name}}</code>, <code>{{subject}}</code>, <code>{{message}}</code></li>
+      <li>Copy your <strong>Public Key</strong>, <strong>Service ID</strong>, and <strong>Template ID</strong> into the fields below — they'll be saved in this browser</li>
+    </ol>
+  </div>
+
+  <!-- EmailJS Config -->
+  <div class="card">
+    <h2>⚙️ Email Settings</h2>
+    <div class="frow">
+      <div class="field">
+        <label>EmailJS Public Key</label>
+        <input type="text" id="cfgPublicKey" placeholder="e.g. AbCdEfGhIjKlMnOp"/>
+      </div>
+      <div class="field">
+        <label>EmailJS Service ID</label>
+        <input type="text" id="cfgServiceId" placeholder="e.g. service_xxxxxxx"/>
+      </div>
+    </div>
+    <div class="field">
+      <label>EmailJS Template ID</label>
+      <input type="text" id="cfgTemplateId" placeholder="e.g. template_xxxxxxx"/>
+    </div>
+    <button class="send-btn approve" id="saveConfigBtn" type="button" style="background:var(--indigo)">💾 Save Settings</button>
+    <div class="status-msg" id="configStatus"></div>
+  </div>
+
+  <!-- Applicant Details -->
+  <div class="card">
+    <h2>👤 Applicant Details</h2>
+    <div class="frow">
+      <div class="field">
+        <label>Applicant Name</label>
+        <input type="text" id="appName" placeholder="Juan dela Cruz"/>
+      </div>
+      <div class="field">
+        <label>Applicant Email</label>
+        <input type="email" id="appEmail" placeholder="juan@email.com"/>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Reference Number</label>
+        <input type="text" id="appRef" placeholder="GIN-XXXXXX-XXX"/>
+      </div>
+      <div class="field">
+        <label>Loan Amount</label>
+        <input type="text" id="appAmount" placeholder="₱50,000"/>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Monthly Payment</label>
+        <input type="text" id="appMonthly" placeholder="₱4,500"/>
+      </div>
+      <div class="field">
+        <label>Term</label>
+        <input type="text" id="appTerm" placeholder="12 months"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision -->
+  <div class="card">
+    <h2>📋 Decision</h2>
+    <div class="decision-toggle">
+      <button type="button" class="decision-btn approve" id="btnApprove">
+        <span class="icon">✅</span><span class="lbl">Approve</span>
+      </button>
+      <button type="button" class="decision-btn decline" id="btnDecline">
+        <span class="icon">❌</span><span class="lbl">Decline</span>
+      </button>
+    </div>
+
+    <div class="reasons" id="declineReasons">
+      <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:10px">Reason for decline (select one or more):</label>
+      <span class="reason-chip" data-reason="Insufficient monthly income relative to the requested loan amount">Insufficient income</span>
+      <span class="reason-chip" data-reason="High debt-to-income ratio">High DTI ratio</span>
+      <span class="reason-chip" data-reason="Incomplete or unclear identification documents">Incomplete documents</span>
+      <span class="reason-chip" data-reason="Unable to verify identity from submitted ID and selfie">ID verification failed</span>
+      <span class="reason-chip" data-reason="Poor credit history on record">Poor credit history</span>
+      <span class="reason-chip" data-reason="Requested loan amount exceeds eligibility limit">Amount exceeds limit</span>
+    </div>
+
+    <div class="field">
+      <label>Additional message <span class="hint">(optional — added to the email)</span></label>
+      <textarea id="customMsg" placeholder="Add any personal note for the applicant..."></textarea>
+    </div>
+
+    <button class="send-btn approve" id="sendBtn" type="button" disabled>
+      <span id="sendBtnText">Select a decision first</span>
+      <div class="spinner" id="sendSpinner"></div>
+    </button>
+
+    <div class="preview-box" id="previewBox">
+      <div class="preview-label">Email Preview</div>
+      <div id="previewContent"></div>
+    </div>
+
+    <div class="status-msg" id="sendStatus"></div>
+  </div>
+</div>
+
+<script>
+// ── Config persistence ──
+const cfgKeys = ['cfgPublicKey','cfgServiceId','cfgTemplateId'];
+cfgKeys.forEach(k => {
+  const saved = localStorage.getItem(k);
+  if (saved) document.getElementById(k).value = saved;
+});
+if (localStorage.getItem('cfgPublicKey')) {
+  document.getElementById('setupBanner').classList.add('hide');
+  try { emailjs.init(localStorage.getItem('cfgPublicKey')); } catch(e){}
+}
+
+document.getElementById('saveConfigBtn').addEventListener('click', () => {
+  cfgKeys.forEach(k => localStorage.setItem(k, document.getElementById(k).value.trim()));
+  const status = document.getElementById('configStatus');
+  const pk = document.getElementById('cfgPublicKey').value.trim();
+  if (pk) {
+    try { emailjs.init(pk); } catch(e){}
+    document.getElementById('setupBanner').classList.add('hide');
+  }
+  status.textContent = '✓ Settings saved in this browser.';
+  status.className = 'status-msg success show';
+  setTimeout(() => status.classList.remove('show'), 3000);
+});
+
+// ── Decision toggle ──
+let decision = null;
+const selectedReasons = new Set();
+const btnApprove = document.getElementById('btnApprove');
+const btnDecline = document.getElementById('btnDecline');
+const declineReasons = document.getElementById('declineReasons');
+const sendBtn = document.getElementById('sendBtn');
+const sendBtnText = document.getElementById('sendBtnText');
+
+btnApprove.addEventListener('click', () => {
+  decision = 'approve';
+  btnApprove.classList.add('active');
+  btnDecline.classList.remove('active');
+  declineReasons.classList.remove('show');
+  sendBtn.className = 'send-btn approve';
+  sendBtnText.textContent = '✅ Send Approval Email';
+  sendBtn.disabled = false;
+  updatePreview();
+});
+btnDecline.addEventListener('click', () => {
+  decision = 'decline';
+  btnDecline.classList.add('active');
+  btnApprove.classList.remove('active');
+  declineReasons.classList.add('show');
+  sendBtn.className = 'send-btn decline';
+  sendBtnText.textContent = '❌ Send Decline Email';
+  sendBtn.disabled = false;
+  updatePreview();
+});
+
+document.querySelectorAll('.reason-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const reason = chip.dataset.reason;
+    if (selectedReasons.has(reason)) {
+      selectedReasons.delete(reason);
+      chip.classList.remove('selected');
+    } else {
+      selectedReasons.add(reason);
+      chip.classList.add('selected');
+    }
+    updatePreview();
+  });
+});
+
+// ── Build email message ──
+function buildMessage(){
+  const name = document.getElementById('appName').value.trim() || 'Applicant';
+  const ref = document.getElementById('appRef').value.trim() || '—';
+  const amount = document.getElementById('appAmount').value.trim() || '—';
+  const monthly = document.getElementById('appMonthly').value.trim() || '—';
+  const term = document.getElementById('appTerm').value.trim() || '—';
+  const customMsg = document.getElementById('customMsg').value.trim();
+  const firstName = name.split(' ')[0];
+
+  let subject, body;
+
+  if (decision === 'approve') {
+    subject = `Your Ginhawa Loan Application Has Been Approved! (${ref})`;
+    body = `Dear ${firstName},
+
+Great news! Your loan application has been APPROVED.
+
+Application Details:
+- Reference No.: ${ref}
+- Loan Amount: ${amount}
+- Monthly Payment: ${monthly}
+- Term: ${term}
+
+Our team will contact you within 1-2 business days to complete the disbursement process. Please keep your reference number handy for any follow-up.
+
+${customMsg ? customMsg + '\n\n' : ''}If you have any questions, feel free to reply to this email or contact our support team.
+
+Congratulations, and thank you for choosing Ginhawa Loan!
+
+Warm regards,
+The Ginhawa Loan Team`;
+  } else if (decision === 'decline') {
+    const reasonsList = selectedReasons.size > 0
+      ? Array.from(selectedReasons).map(r => `- ${r}`).join('\n')
+      : '- Did not meet our current lending criteria';
+
+    subject = `Update on Your Ginhawa Loan Application (${ref})`;
+    body = `Dear ${firstName},
+
+Thank you for applying for a loan with Ginhawa Loan. After careful review, we regret to inform you that we are unable to approve your application at this time.
+
+Application Details:
+- Reference No.: ${ref}
+- Loan Amount Requested: ${amount}
+
+Reason(s) for this decision:
+${reasonsList}
+
+${customMsg ? customMsg + '\n\n' : ''}This decision does not necessarily reflect on your overall creditworthiness, and you are welcome to reapply in the future once circumstances change. If you believe this decision was made in error or would like more information, please don't hesitate to contact our support team.
+
+Thank you for your interest in Ginhawa Loan.
+
+Sincerely,
+The Ginhawa Loan Team`;
+  } else {
+    return null;
+  }
+
+  return { subject, body, toName: name, toEmail: document.getElementById('appEmail').value.trim() };
+}
+
+function updatePreview(){
+  const data = buildMessage();
+  const box = document.getElementById('previewBox');
+  if (!data) { box.classList.remove('show'); return; }
+  document.getElementById('previewContent').textContent = `Subject: ${data.subject}\n\n${data.body}`;
+  box.classList.add('show');
+}
+
+// Update preview live
+['appName','appRef','appAmount','appMonthly','appTerm','customMsg','appEmail'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePreview);
+});
+
+// ── Send email ──
+sendBtn.addEventListener('click', async () => {
+  const data = buildMessage();
+  const statusEl = document.getElementById('sendStatus');
+  const email = document.getElementById('appEmail').value.trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    statusEl.textContent = '⚠ Please enter a valid applicant email address.';
+    statusEl.className = 'status-msg error show';
+    return;
+  }
+
+  const pk = localStorage.getItem('cfgPublicKey');
+  const sid = localStorage.getItem('cfgServiceId');
+  const tid = localStorage.getItem('cfgTemplateId');
+
+  if (!pk || !sid || !tid) {
+    statusEl.textContent = '⚠ Please complete the Email Settings setup above first.';
+    statusEl.className = 'status-msg error show';
+    document.getElementById('setupBanner').classList.remove('hide');
+    return;
+  }
+
+  const spinner = document.getElementById('sendSpinner');
+  sendBtn.disabled = true;
+  spinner.classList.add('show');
+  sendBtnText.textContent = 'Sending...';
+
+  try {
+    await emailjs.send(sid, tid, {
+      to_email: data.toEmail,
+      to_name: data.toName,
+      subject: data.subject,
+      message: data.body,
+    });
+    statusEl.textContent = `✓ ${decision === 'approve' ? 'Approval' : 'Decline'} email sent successfully to ${data.toEmail}!`;
+    statusEl.className = 'status-msg success show';
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = '⚠ Failed to send email. Check your EmailJS settings and try again. (' + (err.text || err.message || 'Unknown error') + ')';
+    statusEl.className = 'status-msg error show';
+  } finally {
+    sendBtn.disabled = false;
+    spinner.classList.remove('show');
+    sendBtnText.textContent = decision === 'approve' ? '✅ Send Approval Email' : '❌ Send Decline Email';
+  }
+});
+</script>
+</body>
+</html>
